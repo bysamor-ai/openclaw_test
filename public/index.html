@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gen Video — AI Video Script Generator</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">🎬</span>
+        <span class="logo-text">Gen Video</span>
+      </div>
+      <p class="tagline">Transform your ideas into production-ready video scripts</p>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="input-section">
+      <form id="generate-form" class="generate-form">
+        <div class="form-group">
+          <label for="prompt" class="form-label">Your Video Concept</label>
+          <textarea
+            id="prompt"
+            name="prompt"
+            class="form-textarea"
+            placeholder="Describe your video idea... e.g., 'A 60-second product launch video for a sustainable water bottle brand targeting eco-conscious millennials'"
+            rows="4"
+            maxlength="2000"
+            required
+          ></textarea>
+          <div class="char-count"><span id="char-count">0</span> / 2000</div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group form-group--half">
+            <label for="style" class="form-label">Video Style <span class="optional">(optional)</span></label>
+            <select id="style" name="style" class="form-select">
+              <option value="">Auto-detect from concept</option>
+              <option value="Commercial">Commercial / Advertisement</option>
+              <option value="Documentary">Documentary</option>
+              <option value="Short Film">Short Film / Narrative</option>
+              <option value="Tutorial">Tutorial / Educational</option>
+              <option value="Social Media">Social Media Content</option>
+              <option value="Music Video">Music Video</option>
+              <option value="Corporate">Corporate / Business</option>
+              <option value="Animation">Animation / Motion Graphics</option>
+            </select>
+          </div>
+
+          <div class="form-group form-group--half">
+            <label for="duration" class="form-label">Target Duration <span class="optional">(optional)</span></label>
+            <select id="duration" name="duration" class="form-select">
+              <option value="">Let AI decide</option>
+              <option value="15-30 seconds">15–30 seconds</option>
+              <option value="30-60 seconds">30–60 seconds</option>
+              <option value="1-2 minutes">1–2 minutes</option>
+              <option value="2-5 minutes">2–5 minutes</option>
+              <option value="5-10 minutes">5–10 minutes</option>
+              <option value="10+ minutes">10+ minutes</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" id="generate-btn" class="btn btn--primary">
+          <span class="btn-icon">✨</span>
+          <span class="btn-text">Generate Script</span>
+        </button>
+      </form>
+    </section>
+
+    <section id="output-section" class="output-section hidden">
+      <div class="output-header">
+        <h2 class="output-title">Generated Script</h2>
+        <div class="output-actions">
+          <button id="copy-btn" class="btn btn--secondary" title="Copy to clipboard">
+            <span>📋</span> Copy
+          </button>
+          <button id="download-btn" class="btn btn--secondary" title="Download as text file">
+            <span>⬇️</span> Download
+          </button>
+          <button id="new-btn" class="btn btn--ghost">
+            <span>🔄</span> New Script
+          </button>
+        </div>
+      </div>
+      <div id="output-content" class="output-content"></div>
+    </section>
+
+    <section id="loading-section" class="loading-section hidden">
+      <div class="loading-animation">
+        <div class="film-strip">
+          <span>🎞</span>
+          <span>🎬</span>
+          <span>🎥</span>
+          <span>🎞</span>
+        </div>
+        <p class="loading-text">Claude is crafting your video script...</p>
+        <p class="loading-subtext">This may take a moment for detailed scripts</p>
+      </div>
+    </section>
+
+    <section id="error-section" class="error-section hidden">
+      <div class="error-box">
+        <span class="error-icon">⚠️</span>
+        <p id="error-message" class="error-message"></p>
+        <button id="retry-btn" class="btn btn--secondary">Try Again</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Powered by <strong>Claude Opus 4.6</strong> — Anthropic's most intelligent model</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
