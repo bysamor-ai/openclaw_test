@@ -54,7 +54,8 @@ button[type=submit]:disabled{opacity:.7;cursor:wait}
 .section-item{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.6rem 1rem}
 .section-item .h2{font-weight:700;font-size:.95rem}
 .section-item .h3{margin-top:.35rem;padding-left:1rem;color:var(--muted);font-size:.85rem;display:flex;flex-direction:column;gap:.2rem}
-.section-item .sc{margin-top:.35rem;font-size:.85rem;color:var(--muted);font-style:italic;padding:.35rem .6rem;background:var(--surface);border-radius:4px;border:1px dashed var(--border)}
+.section-item .sc{margin-top:.4rem;font-size:.875rem;color:#374151;line-height:1.55;padding:.5rem .75rem;background:#fafafa;border-radius:6px;border-left:3px solid var(--primary)}
+.wt{font-size:.72rem;font-weight:500;color:var(--primary);background:#ede9fe;border-radius:20px;padding:.1rem .5rem;margin-left:.4rem;vertical-align:middle}
 .tags{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.5rem}
 .tag{background:#ede9fe;color:#6d28d9;border-radius:20px;padding:.2rem .65rem;font-size:.8rem;font-weight:500}
 .slug-row{font-family:monospace;font-size:.85rem;color:var(--muted);margin-bottom:.75rem}
@@ -160,19 +161,52 @@ const TEMPLATE_KEYS=Object.keys(TEMPLATES);
 function getTemplate(k){return TEMPLATES[k]??TEMPLATES.generic}
 
 // ── createPost ───────────────────────────────────────────
-function slugify(t){return t.toLowerCase().trim().replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-')}
+function slugify(t){return t.toLowerCase().trim().replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-')||'post'}
+const SECTION_HINTS={
+  'introduction':      t=>`介紹「${t}」的背景與重要性，說明讀者將從本文學到什麼。吸引讀者注意並建立閱讀動機。`,
+  'main body':         t=>`深入探討「${t}」的核心內容。提供具體資訊、數據或案例支持主要論點。`,
+  'conclusion':        t=>`總結「${t}」的重點，強化核心訊息，並給予讀者明確的下一步行動建議。`,
+  'prerequisites':     t=>`列出讀者在開始「${t}」之前需要具備的知識、工具或條件。`,
+  'step-by-step instructions': t=>`以清晰的步驟說明如何完成「${t}」，每個步驟搭配範例或截圖。`,
+  'common mistakes to avoid': t=>`列出在「${t}」中常見的錯誤，說明如何識別並避免這些問題。`,
+  'tips and best practices': t=>`分享「${t}」的實用技巧與最佳實踐，幫助讀者達到更好的成果。`,
+  'item list':         t=>`列出與「${t}」相關的重要項目，每項附上簡短說明和理由。`,
+  'honorable mentions':t=>`補充幾個值得關注但未列入主清單的「${t}」相關項目。`,
+  'hook / opening statement': t=>`以一個引人入勝的故事、問題或驚人數據開場，帶出「${t}」的核心觀點。`,
+  'context and background': t=>`說明「${t}」的時代背景、現況與為何此議題值得關注。`,
+  'core argument':     t=>`清楚闡述你對「${t}」的核心主張或觀點，以邏輯和事實支撐立場。`,
+  'supporting evidence': t=>`提供研究數據、專家引述或真實案例，強化你對「${t}」的論點。`,
+  'counter-arguments and rebuttals': t=>`預設讀者對「${t}」可能的反對意見，並逐一給予有力的回應。`,
+  'call to action':    t=>`鼓勵讀者針對「${t}」採取具體行動，並說明下一步如何開始。`,
+  'overview':          t=>`提供「${t}」的整體概覽，包含背景、主要功能與適用場景。`,
+  'key features':      t=>`詳述「${t}」的核心功能與特色，說明每項功能的實際用途。`,
+  'pros and cons':     t=>`客觀列出「${t}」的優點與缺點，幫助讀者做出明智判斷。`,
+  "who is it for?":    t=>`說明「${t}」最適合哪類使用者，以及哪些人可能不適合。`,
+  'final verdict':     t=>`給出對「${t}」的最終評價與推薦建議，總結整體使用體驗。`,
+};
+function sectionHint(heading,topic){
+  const key=heading.toLowerCase();
+  const fn=SECTION_HINTS[key];
+  return fn?fn(topic):`撰寫「${heading}」的內容，圍繞主題「${topic}」展開，提供具體、有價值的資訊。`;
+}
 function createPost({topic,title,template='generic',wordCountTarget}={}){
   requireString(topic,'topic');
   requireOneOf(template,TEMPLATE_KEYS,'template');
   const wct=optionalPositiveInt(wordCountTarget,800,'wordCountTarget');
   const rt=(typeof title==='string'&&title.trim())?title.trim():topic.trim();
   const tpl=getTemplate(template);
+  const perSection=Math.round(wct/tpl.sections.length);
   return{
     title:rt,topic:topic.trim(),slug:slugify(rt),
-    tags:topic.toLowerCase().replace(/[^a-z0-9\s]/g,'').split(/\s+/).filter(w=>w.length>3).slice(0,5),
-    metaDescription:`A comprehensive ${tpl.name.toLowerCase()} about ${topic.trim()}. Explore key insights, practical tips, and expert guidance.`,
+    tags:topic.replace(/[^\u4e00-\u9fa5a-zA-Z0-9\s]/g,' ').split(/\s+/).filter(w=>w.length>1).slice(0,5),
+    metaDescription:`深入了解「${topic.trim()}」的完整指南。${tpl.name}格式，提供關鍵見解、實用技巧與專業建議。`,
     template,wordCountTarget:wct,
-    sections:tpl.sections.map(h=>({heading:h,content:`[Write your "${h}" content about "${topic.trim()}" here.]`})),
+    sections:tpl.sections.map(h=>({
+      heading:h,
+      hint:sectionHint(h,topic.trim()),
+      wordTarget:perSection,
+      content:'',
+    })),
     createdAt:new Date(),
   };
 }
@@ -295,7 +329,7 @@ document.getElementById('form-create-post').addEventListener('submit',e=>{
       ${renderTags(d.tags)}
       ${renderStats([{l:'目標字數',v:d.wordCountTarget.toLocaleString()},{l:'章節數',v:d.sections.length},{l:'模板',v:d.template}])}
       ${rl('Meta 描述')}<p style="font-size:.9rem;color:var(--muted);margin-bottom:.5rem">${d.metaDescription}</p>
-      ${rl('章節結構')}<ul class="sections">${d.sections.map(s=>`<li class="section-item"><div class="h2">📌 ${s.heading}</div><div class="sc">${s.content}</div></li>`).join('')}</ul>`;
+      ${rl('章節結構')}<ul class="sections">${d.sections.map(s=>`<li class="section-item"><div class="h2">📌 ${s.heading} <span class="wt">約 ${s.wordTarget} 字</span></div><div class="sc">💡 ${s.hint}</div></li>`).join('')}</ul>`;
   }catch(err){showErr(res,err.message);}
   btn.textContent='生成文章骨架';btn.disabled=false;
 });

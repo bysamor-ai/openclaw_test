@@ -75,7 +75,7 @@ describe('createPost', () => {
   test('section content references the topic', () => {
     const post = createPost({ topic: 'GraphQL' });
     const hasTopicRef = post.sections.every((s) =>
-      s.content.includes('GraphQL')
+      s.hint.includes('GraphQL')
     );
     expect(hasTopicRef).toBe(true);
   });
