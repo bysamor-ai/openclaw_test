@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Smart Blog Skills</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f6fa;--surface:#fff;--border:#e0e3ea;
+  --primary:#4f6ef7;--primary-h:#3a56d4;
+  --text:#1a1d2e;--muted:#6b7280;
+  --green:#16a34a;--orange:#d97706;--red:#dc2626;
+  --radius:10px;--shadow:0 2px 12px rgba(0,0,0,.08)
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+header{background:var(--primary);color:#fff;padding:2rem 1.5rem 1.5rem;text-align:center}
+header h1{font-size:1.8rem;font-weight:700}
+header .subtitle{margin-top:.4rem;opacity:.85;font-size:.95rem}
+.tabs{display:flex;gap:.5rem;padding:1rem 1.5rem 0;background:var(--surface);border-bottom:2px solid var(--border);overflow-x:auto}
+.tab{padding:.6rem 1.2rem;border:none;background:none;color:var(--muted);font-size:.9rem;font-weight:500;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:color .15s,border-color .15s}
+.tab:hover{color:var(--primary)}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+main{max-width:780px;margin:2rem auto;padding:0 1rem 3rem}
+.panel{display:none}.panel.active{display:block}
+.panel h2{font-size:1.25rem;margin-bottom:1.25rem}
+form{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:1rem}
+label{display:flex;flex-direction:column;gap:.35rem;font-size:.88rem;font-weight:600;color:var(--muted)}
+label .req{color:var(--red)}
+input[type=text],input[type=number],select,textarea{padding:.55rem .75rem;border:1px solid var(--border);border-radius:6px;font-size:.92rem;font-family:inherit;color:var(--text);background:var(--bg);transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,110,247,.15)}
+textarea{resize:vertical}
+button[type=submit]{align-self:flex-start;padding:.6rem 1.4rem;background:var(--primary);color:#fff;border:none;border-radius:6px;font-size:.92rem;font-weight:600;cursor:pointer;transition:background .15s,transform .1s}
+button[type=submit]:hover{background:var(--primary-h)}
+button[type=submit]:active{transform:scale(.97)}
+button[type=submit]:disabled{opacity:.7;cursor:wait}
+.result{margin-top:1.25rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;box-shadow:var(--shadow)}
+.result.hidden{display:none}
+.score-badge{display:inline-flex;align-items:center;gap:.5rem;font-size:2rem;font-weight:700;margin-bottom:1rem}
+.grade{font-size:1.1rem;font-weight:700;padding:.2rem .6rem;border-radius:20px;color:#fff}
+.grade-A{background:var(--green)}.grade-B{background:#2563eb}.grade-C{background:var(--orange)}.grade-D{background:#ea580c}.grade-F{background:var(--red)}
+.stats{display:flex;flex-wrap:wrap;gap:.75rem;margin-bottom:1rem}
+.stat{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.45rem .9rem;font-size:.85rem}
+.stat strong{display:block;font-size:1.1rem;color:var(--primary)}
+.issues{list-style:none;display:flex;flex-direction:column;gap:.5rem;margin-bottom:1rem}
+.issue{display:flex;align-items:flex-start;gap:.5rem;padding:.5rem .75rem;border-radius:6px;font-size:.875rem;line-height:1.4}
+.issue.error{background:#fef2f2;border-left:3px solid var(--red)}
+.issue.warning{background:#fffbeb;border-left:3px solid var(--orange)}
+.issue.info{background:#eff6ff;border-left:3px solid #3b82f6}
+.suggestions{list-style:none;display:flex;flex-direction:column;gap:.4rem}
+.suggestions li{padding:.4rem .75rem;background:#f0fdf4;border-left:3px solid var(--green);border-radius:6px;font-size:.875rem}
+.suggestions li::before{content:'💡 '}
+.sections{list-style:none;display:flex;flex-direction:column;gap:.5rem}
+.section-item{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.6rem 1rem}
+.section-item .h2{font-weight:700;font-size:.95rem}
+.section-item .h3{margin-top:.35rem;padding-left:1rem;color:var(--muted);font-size:.85rem;display:flex;flex-direction:column;gap:.2rem}
+.tags{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.5rem}
+.tag{background:#ede9fe;color:#6d28d9;border-radius:20px;padding:.2rem .65rem;font-size:.8rem;font-weight:500}
+.slug-row{font-family:monospace;font-size:.85rem;color:var(--muted);margin-bottom:.75rem}
+.rl{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:1rem 0 .4rem}
+.error-msg{color:var(--red);font-size:.9rem;padding:.75rem 1rem;background:#fef2f2;border-radius:6px;border-left:3px solid var(--red)}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>✍️ Smart Blog Skills</h1>
+  <p class="subtitle">AI 驅動的部落格寫作工具組</p>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-tab="create-post">📝 建立文章</button>
+  <button class="tab" data-tab="outline">📋 內容大綱</button>
+  <button class="tab" data-tab="seo">🔍 SEO 分析</button>
+  <button class="tab" data-tab="readability">📖 可讀性分析</button>
+</nav>
+
+<main>
+  <section id="create-post" class="panel active">
+    <h2>建立文章骨架</h2>
+    <form id="form-create-post">
+      <label>主題 <span class="req">*</span><input type="text" name="topic" placeholder="例：JavaScript 效能優化" required/></label>
+      <label>自訂標題（選填）<input type="text" name="title" placeholder="例：10 個提升 JS 效能的技巧"/></label>
+      <label>模板
+        <select name="template">
+          <option value="generic">一般文章（generic）</option>
+          <option value="howTo">教學指南（howTo）</option>
+          <option value="listicle">條列式（listicle）</option>
+          <option value="opinion">觀點文章（opinion）</option>
+          <option value="review">產品評測（review）</option>
+        </select>
+      </label>
+      <label>目標字數（選填）<input type="number" name="wordCountTarget" placeholder="800" min="1"/></label>
+      <button type="submit">生成文章骨架</button>
+    </form>
+    <div id="result-create-post" class="result hidden"></div>
+  </section>
+
+  <section id="outline" class="panel">
+    <h2>生成內容大綱</h2>
+    <form id="form-outline">
+      <label>主題 <span class="req">*</span><input type="text" name="topic" placeholder="例：React Hooks" required/></label>
+      <label>自訂章節（選填，每行一個）<textarea name="sections" rows="4" placeholder="介紹&#10;核心概念&#10;實戰應用&#10;總結"></textarea></label>
+      <label>每節子項目數<input type="number" name="subPointsPerSection" placeholder="2" min="1" max="6"/></label>
+      <button type="submit">生成大綱</button>
+    </form>
+    <div id="result-outline" class="result hidden"></div>
+  </section>
+
+  <section id="seo" class="panel">
+    <h2>SEO 分析</h2>
+    <form id="form-seo">
+      <label>標題 <span class="req">*</span><input type="text" name="title" placeholder="例：10 個提升 JS 效能的技巧" required/></label>
+      <label>Meta 描述 <span class="req">*</span><input type="text" name="metaDescription" placeholder="120–160 字元的摘要描述" required/></label>
+      <label>文章內容 <span class="req">*</span><textarea name="content" rows="6" placeholder="貼上你的文章內容…" required></textarea></label>
+      <label>焦點關鍵字（選填）<input type="text" name="keyword" placeholder="例：JavaScript 效能"/></label>
+      <label>標籤（選填，逗號分隔）<input type="text" name="tags" placeholder="例：javascript, 前端, 效能"/></label>
+      <button type="submit">分析 SEO</button>
+    </form>
+    <div id="result-seo" class="result hidden"></div>
+  </section>
+
+  <section id="readability" class="panel">
+    <h2>可讀性分析</h2>
+    <form id="form-readability">
+      <label>文章內容 <span class="req">*</span><textarea name="content" rows="8" placeholder="貼上你的文章內容…" required></textarea></label>
+      <label>目標讀者
+        <select name="target">
+          <option value="general">一般讀者（general）</option>
+          <option value="expert">專業讀者（expert）</option>
+        </select>
+      </label>
+      <button type="submit">分析可讀性</button>
+    </form>
+    <div id="result-readability" class="result hidden"></div>
+  </section>
+</main>
+
+<script>
+// ════════════════════════════════════════════════════════
+// PLUGIN LOGIC (inlined from src/)
+// ════════════════════════════════════════════════════════
+
+// ── validators ──────────────────────────────────────────
+function requireString(v,n){if(typeof v!=='string'||v.trim().length===0)throw new TypeError(`"${n}" must be a non-empty string.`)}
+function requirePositiveInt(v,n){if(!Number.isInteger(v)||v<1)throw new TypeError(`"${n}" must be a positive integer.`)}
+function optionalPositiveInt(v,d,n){if(v==null)return d;requirePositiveInt(v,n);return v}
+function requireOneOf(v,a,n){if(!a.includes(v))throw new TypeError(`"${n}" must be one of: ${a.join(', ')}. Received: "${v}".`)}
+
+// ── templates ────────────────────────────────────────────
+const TEMPLATES={
+  howTo:{name:'How-To Guide',sections:['Introduction','Prerequisites','Step-by-Step Instructions','Common Mistakes to Avoid','Tips and Best Practices','Conclusion']},
+  listicle:{name:'Listicle',sections:['Introduction','Item List','Honorable Mentions','Conclusion']},
+  opinion:{name:'Opinion / Thought Leadership',sections:['Hook / Opening Statement','Context and Background','Core Argument','Supporting Evidence','Counter-Arguments and Rebuttals','Call to Action']},
+  review:{name:'Product Review',sections:['Introduction','Overview','Key Features','Pros and Cons','Who Is It For?','Final Verdict']},
+  generic:{name:'Generic Post',sections:['Introduction','Main Body','Conclusion']},
+};
+const TEMPLATE_KEYS=Object.keys(TEMPLATES);
+function getTemplate(k){return TEMPLATES[k]??TEMPLATES.generic}
+
+// ── createPost ───────────────────────────────────────────
+function slugify(t){return t.toLowerCase().trim().replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').replace(/-+/g,'-')}
+function createPost({topic,title,template='generic',wordCountTarget}={}){
+  requireString(topic,'topic');
+  requireOneOf(template,TEMPLATE_KEYS,'template');
+  const wct=optionalPositiveInt(wordCountTarget,800,'wordCountTarget');
+  const rt=(typeof title==='string'&&title.trim())?title.trim():topic.trim();
+  const tpl=getTemplate(template);
+  return{
+    title:rt,topic:topic.trim(),slug:slugify(rt),
+    tags:topic.toLowerCase().replace(/[^a-z0-9\s]/g,'').split(/\s+/).filter(w=>w.length>3).slice(0,5),
+    metaDescription:`A comprehensive ${tpl.name.toLowerCase()} about ${topic.trim()}. Explore key insights, practical tips, and expert guidance.`,
+    template,wordCountTarget:wct,
+    sections:tpl.sections.map(h=>({heading:h,content:`[Write your "${h}" content about "${topic.trim()}" here.]`})),
+    createdAt:new Date(),
+  };
+}
+
+// ── outlineContent ───────────────────────────────────────
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1)}
+function outlineContent({topic,sections,subPointsPerSection}={}){
+  requireString(topic,'topic');
+  const spp=optionalPositiveInt(subPointsPerSection,2,'subPointsPerSection');
+  const qualifiers=['Key aspects of '+topic,'Common challenges','Best practices','Real-world examples','Tools and resources','Step-by-step guidance','Expert tips','Frequently asked questions'];
+  const resolved=(Array.isArray(sections)&&sections.length>0)?sections:
+    ['Introduction to '+topic,'Why '+topic+' matters','Core concepts','Practical applications','Advanced techniques','Common pitfalls and how to avoid them','Conclusion and next steps'];
+  const outline=resolved.map(h=>{
+    const item={level:2,heading:cap(h)};
+    if(spp>0)item.children=qualifiers.slice(0,spp).map(t=>({level:3,heading:`${cap(t)} for ${h.toLowerCase()}`}));
+    return item;
+  });
+  return{topic:topic.trim(),title:`The Complete Guide to ${cap(topic.trim())}`,outline,depth:spp>0?2:1};
+}
+
+// ── optimizeSEO ──────────────────────────────────────────
+function optimizeSEO({title,metaDescription,content,keyword='',tags=[]}={}){
+  requireString(title,'title');requireString(metaDescription,'metaDescription');requireString(content,'content');
+  const issues=[],suggestions=[],checks={};let deductions=0;
+  const words=content.trim().split(/\s+/).filter(Boolean);const wc=words.length;
+  const kw=keyword.toLowerCase().trim();
+  const occ=(t,k)=>k?(t.match(new RegExp(k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'))??[]).length:0;
+  const toG=s=>s>=90?'A':s>=80?'B':s>=70?'C':s>=60?'D':'F';
+
+  checks.titleLength=title.length>=30&&title.length<=65;
+  if(!checks.titleLength){issues.push({severity:'warning',message:`Title is ${title.length} chars; ideal range is 30–65.`});suggestions.push('Adjust title length to between 30 and 65 characters.');deductions+=10;}
+  if(kw){checks.keywordInTitle=title.toLowerCase().includes(kw);if(!checks.keywordInTitle){issues.push({severity:'error',message:`Focus keyword "${keyword}" not found in title.`});suggestions.push(`Include the focus keyword "${keyword}" in the title.`);deductions+=15;}}
+  checks.metaLength=metaDescription.length>=120&&metaDescription.length<=160;
+  if(!checks.metaLength){issues.push({severity:'warning',message:`Meta description is ${metaDescription.length} chars; ideal range is 120–160.`});suggestions.push('Rewrite meta description to be 120–160 characters.');deductions+=10;}
+  if(kw){checks.keywordInMeta=metaDescription.toLowerCase().includes(kw);if(!checks.keywordInMeta){issues.push({severity:'warning',message:`Focus keyword "${keyword}" missing from meta description.`});suggestions.push(`Add the focus keyword "${keyword}" to the meta description.`);deductions+=8;}}
+  checks.wordCount=wc>=300;
+  if(!checks.wordCount){issues.push({severity:'error',message:`Content has only ${wc} words; minimum recommended is 300.`});suggestions.push('Expand the post to at least 300 words.');deductions+=20;}
+  if(kw){const d=wc>0?(occ(content,kw)/wc)*100:0;checks.keywordDensity=d>=0.5&&d<=2.5;
+    if(d<0.5){issues.push({severity:'warning',message:`Keyword density ${d.toFixed(2)}% — too low (min 0.5%).`});suggestions.push(`Use the keyword "${keyword}" more naturally throughout the post.`);deductions+=8;}
+    else if(d>2.5){issues.push({severity:'warning',message:`Keyword density ${d.toFixed(2)}% — too high (max 2.5%).`});suggestions.push(`Reduce repeated use of "${keyword}".`);deductions+=8;}
+    checks.keywordInFirstParagraph=content.toLowerCase().indexOf(kw)<200;
+    if(!checks.keywordInFirstParagraph){issues.push({severity:'info',message:'Focus keyword not found in first ~200 characters.'});suggestions.push(`Mention "${keyword}" early in the first paragraph.`);deductions+=5;}}
+  checks.hasTags=Array.isArray(tags)&&tags.length>=2;
+  if(!checks.hasTags){issues.push({severity:'info',message:'Post has fewer than 2 tags.'});suggestions.push('Add at least 2–5 relevant tags.');deductions+=4;}
+  const score=Math.max(0,100-deductions);
+  return{score,grade:toG(score),issues,suggestions,checks};
+}
+
+// ── analyzeReadability ───────────────────────────────────
+function countSyllables(w){
+  w=w.toLowerCase().replace(/[^a-z]/g,'');
+  if(!w.length)return 0;if(w.length<=3)return 1;
+  w=w.replace(/e$/,'');const m=w.match(/[aeiouy]+/g);return m?m.length:1;
+}
+function analyzeReadability({content,target='general'}={}){
+  requireString(content,'content');
+  const words=(content.match(/\b[a-zA-Z'-]+\b/g)??[]);
+  const sentences=content.split(/[.!?]+/).map(s=>s.trim()).filter(s=>s.length>0);
+  const wc=words.length,sc=Math.max(sentences.length,1);
+  const totalSyl=words.reduce((s,w)=>s+countSyllables(w),0);
+  const asl=wc/sc,aspw=wc>0?totalSyl/wc:0;
+  const flesch=Math.min(100,Math.max(0,206.835-1.015*asl-84.6*aspw));
+  const lvl=flesch>=90?'Very Easy':flesch>=80?'Easy':flesch>=70?'Fairly Easy':flesch>=60?'Standard':flesch>=50?'Fairly Difficult':flesch>=30?'Difficult':'Very Difficult';
+  const issues=[],suggestions=[];
+  const thr=target==='expert'?30:20;
+  if(asl>thr){issues.push({severity:'warning',message:`Average sentence length is ${asl.toFixed(1)} words (recommended max: ${thr}).`});suggestions.push('Break long sentences into shorter ones.');}
+  const passInd=['was','were','is','are','be','been','being','has been','have been','had been','will be','would be','should be','could be','might be'];
+  const passCount=sentences.filter(s=>{const l=s.toLowerCase();return passInd.some(p=>new RegExp(`\\b${p}\\b.*ed\\b|\\b${p}\\b.*en\\b`).test(l));}).length;
+  if(passCount/sc>0.15){issues.push({severity:'warning',message:`~${Math.round(passCount/sc*100)}% of sentences appear to use passive voice.`});suggestions.push('Rewrite passive sentences in active voice.');}
+  const minS=target==='expert'?30:60;
+  if(flesch<minS){issues.push({severity:'warning',message:`Flesch score ${flesch.toFixed(1)} is below recommended minimum of ${minS}.`});suggestions.push('Simplify vocabulary and sentence structure.');}
+  const paras=content.split(/\n{2,}/).filter(p=>p.trim().length>0);
+  const lp=paras.filter(p=>(p.match(/\b[a-zA-Z'-]+\b/g)??[]).length>150);
+  if(lp.length>0){issues.push({severity:'info',message:`${lp.length} paragraph(s) exceed 150 words.`});suggestions.push('Keep paragraphs to 3–5 sentences for better scannability.');}
+  if(!suggestions.length)suggestions.push('Readability looks great — no major issues detected.');
+  return{fleschScore:parseFloat(flesch.toFixed(1)),level:lvl,avgSentenceLen:parseFloat(asl.toFixed(1)),avgSyllablesPerWord:parseFloat(aspw.toFixed(2)),wordCount:wc,sentenceCount:sc,issues,suggestions};
+}
+
+// ════════════════════════════════════════════════════════
+// UI LOGIC
+// ════════════════════════════════════════════════════════
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+function rl(t){return`<div class="rl">${t}</div>`}
+function renderIssues(issues){
+  if(!issues.length)return'';
+  const ic={error:'🚨',warning:'⚠️',info:'ℹ️'};
+  return rl('問題清單')+`<ul class="issues">${issues.map(i=>`<li class="issue ${i.severity}"><span>${ic[i.severity]??'ℹ️'}</span>${i.message}</li>`).join('')}</ul>`;
+}
+function renderSugg(s){
+  if(!s.length)return'';
+  return rl('改善建議')+`<ul class="suggestions">${s.map(x=>`<li>${x}</li>`).join('')}</ul>`;
+}
+function renderStats(s){return`<div class="stats">${s.map(({l,v})=>`<div class="stat"><strong>${v}</strong>${l}</div>`).join('')}</div>`}
+function renderTags(t){return t?.length?`<div class="tags">${t.map(x=>`<span class="tag">${x}</span>`).join('')}</div>`:''}
+function showErr(el,msg){el.classList.remove('hidden');el.innerHTML=`<div class="error-msg">❌ ${msg}</div>`}
+
+// Create Post
+document.getElementById('form-create-post').addEventListener('submit',e=>{
+  e.preventDefault();
+  const btn=e.target.querySelector('button');
+  const res=document.getElementById('result-create-post');
+  const fd=new FormData(e.target);
+  const body={topic:fd.get('topic'),template:fd.get('template')};
+  if(fd.get('title'))body.title=fd.get('title');
+  if(fd.get('wordCountTarget'))body.wordCountTarget=parseInt(fd.get('wordCountTarget'));
+  btn.textContent='生成中…';btn.disabled=true;
+  try{
+    const d=createPost(body);
+    res.classList.remove('hidden');
+    res.innerHTML=`<h3>${d.title}</h3>
+      <div class="slug-row">🔗 /${d.slug}</div>
+      ${renderTags(d.tags)}
+      ${renderStats([{l:'目標字數',v:d.wordCountTarget.toLocaleString()},{l:'章節數',v:d.sections.length},{l:'模板',v:d.template}])}
+      ${rl('Meta 描述')}<p style="font-size:.9rem;color:var(--muted);margin-bottom:.5rem">${d.metaDescription}</p>
+      ${rl('章節結構')}<ul class="sections">${d.sections.map(s=>`<li class="section-item"><div class="h2">📌 ${s.heading}</div></li>`).join('')}</ul>`;
+  }catch(err){showErr(res,err.message);}
+  btn.textContent='生成文章骨架';btn.disabled=false;
+});
+
+// Outline
+document.getElementById('form-outline').addEventListener('submit',e=>{
+  e.preventDefault();
+  const btn=e.target.querySelector('button');
+  const res=document.getElementById('result-outline');
+  const fd=new FormData(e.target);
+  const body={topic:fd.get('topic')};
+  const raw=fd.get('sections').trim();
+  if(raw)body.sections=raw.split('\n').map(s=>s.trim()).filter(Boolean);
+  if(fd.get('subPointsPerSection'))body.subPointsPerSection=parseInt(fd.get('subPointsPerSection'));
+  btn.textContent='生成中…';btn.disabled=true;
+  try{
+    const d=outlineContent(body);
+    res.classList.remove('hidden');
+    res.innerHTML=`<h3>${d.title}</h3>
+      ${renderStats([{l:'主題',v:d.topic},{l:'章節數',v:d.outline.length},{l:'大綱深度',v:'H'+(d.depth+1)}])}
+      ${rl('大綱結構')}<ul class="sections">${d.outline.map(item=>{
+        const ch=item.children?.length?`<div class="h3">${item.children.map(c=>`<span>↳ ${c.heading}</span>`).join('')}</div>`:'';
+        return`<li class="section-item"><div class="h2">📌 ${item.heading}</div>${ch}</li>`;
+      }).join('')}</ul>`;
+  }catch(err){showErr(res,err.message);}
+  btn.textContent='生成大綱';btn.disabled=false;
+});
+
+// SEO
+document.getElementById('form-seo').addEventListener('submit',e=>{
+  e.preventDefault();
+  const btn=e.target.querySelector('button');
+  const res=document.getElementById('result-seo');
+  const fd=new FormData(e.target);
+  const body={title:fd.get('title'),metaDescription:fd.get('metaDescription'),content:fd.get('content')};
+  if(fd.get('keyword'))body.keyword=fd.get('keyword');
+  if(fd.get('tags'))body.tags=fd.get('tags').split(',').map(t=>t.trim()).filter(Boolean);
+  btn.textContent='分析中…';btn.disabled=true;
+  try{
+    const d=optimizeSEO(body);
+    const checks=Object.entries(d.checks).map(([k,v])=>`<span class="tag" style="background:${v?'#dcfce7':'#fee2e2'};color:${v?'#15803d':'#b91c1c'}">${v?'✅':'❌'} ${k}</span>`).join('');
+    res.classList.remove('hidden');
+    res.innerHTML=`<div class="score-badge">${d.score}<span>/100</span><span class="grade grade-${d.grade}">${d.grade}</span></div>
+      ${rl('檢查項目')}<div class="tags" style="margin-bottom:.75rem">${checks}</div>
+      ${renderIssues(d.issues)}${renderSugg(d.suggestions)}`;
+  }catch(err){showErr(res,err.message);}
+  btn.textContent='分析 SEO';btn.disabled=false;
+});
+
+// Readability
+document.getElementById('form-readability').addEventListener('submit',e=>{
+  e.preventDefault();
+  const btn=e.target.querySelector('button');
+  const res=document.getElementById('result-readability');
+  const fd=new FormData(e.target);
+  btn.textContent='分析中…';btn.disabled=true;
+  try{
+    const d=analyzeReadability({content:fd.get('content'),target:fd.get('target')});
+    const lvlColor={'Very Easy':'#16a34a','Easy':'#2563eb','Fairly Easy':'#0891b2','Standard':'#d97706','Fairly Difficult':'#ea580c','Difficult':'#dc2626','Very Difficult':'#7f1d1d'};
+    const c=lvlColor[d.level]??'#6b7280';
+    res.classList.remove('hidden');
+    res.innerHTML=`<div class="score-badge">${d.fleschScore}<span style="font-size:1rem;font-weight:600;color:${c};background:${c}22;padding:.2rem .7rem;border-radius:20px">${d.level}</span></div>
+      ${renderStats([{l:'字數',v:d.wordCount.toLocaleString()},{l:'句子數',v:d.sentenceCount},{l:'平均句長（字）',v:d.avgSentenceLen},{l:'平均音節/字',v:d.avgSyllablesPerWord}])}
+      ${renderIssues(d.issues)}${renderSugg(d.suggestions)}`;
+  }catch(err){showErr(res,err.message);}
+  btn.textContent='分析可讀性';btn.disabled=false;
+});
+</script>
+</body>
+</html>
