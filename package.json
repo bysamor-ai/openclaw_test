@@ -1,0 +1,26 @@
+{
+  "name": "smart-blog-skills-plugin",
+  "version": "1.0.0",
+  "description": "A smart plugin providing AI-powered blog writing skills: post creation, content outlining, SEO optimization, and readability analysis.",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "test:coverage": "node --experimental-vm-modules node_modules/.bin/jest --coverage"
+  },
+  "keywords": [
+    "blog",
+    "skills",
+    "plugin",
+    "seo",
+    "content",
+    "writing"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.0.0"
+  },
+  "jest": {
+    "transform": {}
+  }
+}
