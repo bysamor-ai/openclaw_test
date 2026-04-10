@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Blog Skills</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>✍️ Smart Blog Skills</h1>
+    <p class="subtitle">AI 驅動的部落格寫作工具組</p>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="create-post">📝 建立文章</button>
+    <button class="tab" data-tab="outline">📋 內容大綱</button>
+    <button class="tab" data-tab="seo">🔍 SEO 分析</button>
+    <button class="tab" data-tab="readability">📖 可讀性分析</button>
+  </nav>
+
+  <main>
+
+    <!-- ── Create Post ─────────────────────────────────── -->
+    <section id="create-post" class="panel active">
+      <h2>建立文章骨架</h2>
+      <form id="form-create-post">
+        <label>主題 <span class="required">*</span>
+          <input type="text" name="topic" placeholder="例：JavaScript 效能優化" required />
+        </label>
+        <label>自訂標題（選填）
+          <input type="text" name="title" placeholder="例：10 個提升 JS 效能的技巧" />
+        </label>
+        <label>模板
+          <select name="template">
+            <option value="generic">一般文章（generic）</option>
+            <option value="howTo">教學指南（howTo）</option>
+            <option value="listicle">條列式（listicle）</option>
+            <option value="opinion">觀點文章（opinion）</option>
+            <option value="review">產品評測（review）</option>
+          </select>
+        </label>
+        <label>目標字數（選填）
+          <input type="number" name="wordCountTarget" placeholder="800" min="1" />
+        </label>
+        <button type="submit">生成文章骨架</button>
+      </form>
+      <div id="result-create-post" class="result hidden"></div>
+    </section>
+
+    <!-- ── Outline ─────────────────────────────────────── -->
+    <section id="outline" class="panel">
+      <h2>生成內容大綱</h2>
+      <form id="form-outline">
+        <label>主題 <span class="required">*</span>
+          <input type="text" name="topic" placeholder="例：React Hooks" required />
+        </label>
+        <label>自訂章節（選填，每行一個）
+          <textarea name="sections" rows="4" placeholder="介紹&#10;核心概念&#10;實戰應用&#10;總結"></textarea>
+        </label>
+        <label>每節子項目數
+          <input type="number" name="subPointsPerSection" placeholder="2" min="1" max="6" />
+        </label>
+        <button type="submit">生成大綱</button>
+      </form>
+      <div id="result-outline" class="result hidden"></div>
+    </section>
+
+    <!-- ── SEO ─────────────────────────────────────────── -->
+    <section id="seo" class="panel">
+      <h2>SEO 分析</h2>
+      <form id="form-seo">
+        <label>標題 <span class="required">*</span>
+          <input type="text" name="title" placeholder="例：10 個提升 JS 效能的技巧" required />
+        </label>
+        <label>Meta 描述 <span class="required">*</span>
+          <input type="text" name="metaDescription" placeholder="120–160 字元的摘要描述" required />
+        </label>
+        <label>文章內容 <span class="required">*</span>
+          <textarea name="content" rows="6" placeholder="貼上你的文章內容…" required></textarea>
+        </label>
+        <label>焦點關鍵字（選填）
+          <input type="text" name="keyword" placeholder="例：JavaScript 效能" />
+        </label>
+        <label>標籤（選填，逗號分隔）
+          <input type="text" name="tags" placeholder="例：javascript, 前端, 效能" />
+        </label>
+        <button type="submit">分析 SEO</button>
+      </form>
+      <div id="result-seo" class="result hidden"></div>
+    </section>
+
+    <!-- ── Readability ─────────────────────────────────── -->
+    <section id="readability" class="panel">
+      <h2>可讀性分析</h2>
+      <form id="form-readability">
+        <label>文章內容 <span class="required">*</span>
+          <textarea name="content" rows="8" placeholder="貼上你的文章內容…" required></textarea>
+        </label>
+        <label>目標讀者
+          <select name="target">
+            <option value="general">一般讀者（general）</option>
+            <option value="expert">專業讀者（expert）</option>
+          </select>
+        </label>
+        <button type="submit">分析可讀性</button>
+      </form>
+      <div id="result-readability" class="result hidden"></div>
+    </section>
+
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
